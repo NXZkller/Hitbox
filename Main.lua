@@ -61,7 +61,6 @@ BtnVis.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
 BtnVis.TextColor3 = Color3.new(1, 1, 1)
 BtnVis.Parent = MainFrame
 
--- Lógica para ocultar menú con Right Shift
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
         MainFrame.Visible = not MainFrame.Visible
@@ -85,19 +84,25 @@ BtnVis.MouseButton1Click:Connect(function()
     BtnVis.Text = getgenv().HitboxVisible and "Visible: SI" or "Visible: NO"
 end)
 
--- Bucle de aplicación de Hitbox
+-- BUCLE DE ALTO RENDIMIENTO PARA REGISTRO DE DAÑO
 RunService.RenderStepped:Connect(function()
     for _, player in pairs(Players:GetPlayers()) do
         pcall(function()
             if player ~= LocalPlayer and player.Character then
                 local root = player.Character:FindFirstChild("HumanoidRootPart")
-                if root then
+                local hum = player.Character:FindFirstChild("Humanoid")
+                
+                if root and hum and hum.Health > 0 then
+                    -- Expansión física y de registro
                     root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
                     root.Transparency = getgenv().HitboxVisible and 0.8 or 1
-                    root.Color = Color3.fromRGB(150, 150, 150) -- COLOR GRIS
-                    root.Shape = Enum.PartType.Block -- FORMA CUBO
-                    root.CanCollide = false
-                    root.Massless = true
+                    root.Color = Color3.fromRGB(150, 150, 150)
+                    root.Shape = Enum.PartType.Block
+                    
+                    -- PROPIEDADES CRÍTICAS PARA EL DAÑO:
+                    root.CanCollide = false -- Para no chocar
+                    root.CanTouch = true    -- IMPORTANTE: Permite que las armas detecten el toque
+                    root.Massless = true    -- No afecta la gravedad del enemigo
                 end
             end
         end)
