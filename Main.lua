@@ -9,6 +9,7 @@ local LocalPlayer = Players.LocalPlayer
 getgenv().HitboxSize = 10
 getgenv().HitboxEnabled = true
 getgenv().HitboxVisible = true
+getgenv().EspEnabled = false
 
 if CoreGui:FindFirstChild("XenoHitboxSystem") then
     CoreGui:FindFirstChild("XenoHitboxSystem"):Destroy()
@@ -19,7 +20,7 @@ ScreenGui.Name = "XenoHitboxSystem"
 ScreenGui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 180, 0, 160)
+MainFrame.Size = UDim2.new(0, 180, 0, 200) -- Aumentado para el nuevo botón
 MainFrame.Position = UDim2.new(0.5, -90, 0.4, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Active = true
@@ -39,7 +40,7 @@ Title.Parent = MainFrame
 
 local BtnPlus = Instance.new("TextButton")
 BtnPlus.Size = UDim2.new(0, 70, 0, 35)
-BtnPlus.Position = UDim2.new(0.05, 0, 0.3, 0)
+BtnPlus.Position = UDim2.new(0.05, 0, 0.25, 0)
 BtnPlus.Text = "+"
 BtnPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 BtnPlus.TextColor3 = Color3.new(0, 1, 0)
@@ -47,7 +48,7 @@ BtnPlus.Parent = MainFrame
 
 local BtnMinus = Instance.new("TextButton")
 BtnMinus.Size = UDim2.new(0, 70, 0, 35)
-BtnMinus.Position = UDim2.new(0.55, 0, 0.3, 0)
+BtnMinus.Position = UDim2.new(0.55, 0, 0.25, 0)
 BtnMinus.Text = "-"
 BtnMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 BtnMinus.TextColor3 = Color3.new(1, 0, 0)
@@ -55,12 +56,21 @@ BtnMinus.Parent = MainFrame
 
 local BtnVis = Instance.new("TextButton")
 BtnVis.Size = UDim2.new(0, 160, 0, 35)
-BtnVis.Position = UDim2.new(0.05, 0, 0.65, 0)
+BtnVis.Position = UDim2.new(0.05, 0, 0.50, 0)
 BtnVis.Text = "Visible: SI"
 BtnVis.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
 BtnVis.TextColor3 = Color3.new(1, 1, 1)
 BtnVis.Parent = MainFrame
 
+local BtnEsp = Instance.new("TextButton")
+BtnEsp.Size = UDim2.new(0, 160, 0, 35)
+BtnEsp.Position = UDim2.new(0.05, 0, 0.75, 0)
+BtnEsp.Text = "ESP: NO"
+BtnEsp.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+BtnEsp.TextColor3 = Color3.new(1, 1, 1)
+BtnEsp.Parent = MainFrame
+
+-- Ocultar con RShift
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
         MainFrame.Visible = not MainFrame.Visible
@@ -84,25 +94,52 @@ BtnVis.MouseButton1Click:Connect(function()
     BtnVis.Text = getgenv().HitboxVisible and "Visible: SI" or "Visible: NO"
 end)
 
--- BUCLE DE ALTO RENDIMIENTO PARA REGISTRO DE DAÑO
+BtnEsp.MouseButton1Click:Connect(function()
+    getgenv().EspEnabled = not getgenv().EspEnabled
+    BtnEsp.Text = getgenv().EspEnabled and "ESP: SI" or "ESP: NO"
+end)
+
+-- Función para crear ESP (Highlight)
+local function CreateEsp(player)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "XenoEsp"
+    highlight.Adornee = player.Character
+    highlight.FillColor = Color3.fromRGB(150, 150, 150)
+    highlight.OutlineColor = Color3.new(1, 1, 1)
+    highlight.Parent = CoreGui
+    
+    RunService.RenderStepped:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            highlight.Adornee = player.Character
+            highlight.Enabled = getgenv().EspEnabled
+        else
+            highlight.Enabled = false
+        end
+    end)
+end
+
+-- Aplicar a jugadores actuales y nuevos
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then CreateEsp(p) end
+end
+Players.PlayerAdded:Connect(function(p)
+    if p ~= LocalPlayer then CreateEsp(p) end
+end)
+
+-- Bucle de Hitbox
 RunService.RenderStepped:Connect(function()
     for _, player in pairs(Players:GetPlayers()) do
         pcall(function()
             if player ~= LocalPlayer and player.Character then
                 local root = player.Character:FindFirstChild("HumanoidRootPart")
-                local hum = player.Character:FindFirstChild("Humanoid")
-                
-                if root and hum and hum.Health > 0 then
-                    -- Expansión física y de registro
+                if root then
                     root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
                     root.Transparency = getgenv().HitboxVisible and 0.8 or 1
                     root.Color = Color3.fromRGB(150, 150, 150)
                     root.Shape = Enum.PartType.Block
-                    
-                    -- PROPIEDADES CRÍTICAS PARA EL DAÑO:
-                    root.CanCollide = false -- Para no chocar
-                    root.CanTouch = true    -- IMPORTANTE: Permite que las armas detecten el toque
-                    root.Massless = true    -- No afecta la gravedad del enemigo
+                    root.CanCollide = false
+                    root.CanTouch = true
+                    root.CanQuery = true -- Permite daño de habilidades
                 end
             end
         end)
