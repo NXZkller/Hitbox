@@ -1,94 +1,64 @@
---// Servicios
+--// Xeno Compatible Aimbot FOV
+if not game:IsLoaded() then game.Loaded:Wait() end
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
 local StarterGui = game:GetService("StarterGui")
-local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
---// Configuración
-getgenv().AimConfig = {
-    Enabled = true, -- Estado inicial
-    FovRadius = 120,
-    Smoothing = 0.15,
-    AimPart = "HumanoidRootPart",
-    EspEnabled = true,
-    FovColor = Color3.fromRGB(255, 255, 255),
-    FovThickness = 0.5
-}
+--// Configuración Global
+getgenv().AimbotEnabled = true
+getgenv().FovRadius = 120
+getgenv().Smoothing = 0.15
 
---// Función de Notificación
-local function Notify(estado)
-    local titulo = "Aimbot FOV"
-    local mensaje = estado and "ACTIVADO ✅" or "DESACTIVADO ❌"
-    local color = estado and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)
-    
-    StarterGui:SetCore("SendNotification", {
-        Title = titulo,
-        Text = mensaje,
-        Duration = 2,
-        Button1 = "OK"
-    })
-end
-
---// Círculo de FOV
+--// Círculo FOV (Optimizado para Xeno)
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = true
-FOVCircle.Thickness = getgenv().AimConfig.FovThickness
-FOVCircle.Color = getgenv().AimConfig.FovColor
+FOVCircle.Thickness = 0.5
+FOVCircle.Color = Color3.new(1, 1, 1) -- Blanco puro
 FOVCircle.Transparency = 1
 FOVCircle.NumSides = 100
 FOVCircle.Filled = false
 
---// Interfaz del Menú
-local ScreenGui = Instance.new("ScreenGui", CoreGui)
-ScreenGui.Name = "XenoAimbotIndependent"
+--// Interfaz del Menú (Compatible con Xeno)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ZkllerXeno"
+pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 180, 0, 150)
-MainFrame.Position = UDim2.new(0.8, 0, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 180, 0, 140)
+MainFrame.Position = UDim2.new(0.85, 0, 0.5, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
 local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Text = "FOV: " .. getgenv().AimConfig.FovRadius
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "FOV: " .. getgenv().FovRadius
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.SourceSansBold
 
 local BtnPlus = Instance.new("TextButton", MainFrame)
-BtnPlus.Size = UDim2.new(0, 70, 0, 35)
-BtnPlus.Position = UDim2.new(0.05, 0, 0.3, 0)
+BtnPlus.Size = UDim2.new(0, 70, 0, 30)
+BtnPlus.Position = UDim2.new(0.1, 0, 0.3, 0)
 BtnPlus.Text = "+"
-BtnPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-BtnPlus.TextColor3 = Color3.new(1, 1, 1)
 
 local BtnMinus = Instance.new("TextButton", MainFrame)
-BtnMinus.Size = UDim2.new(0, 70, 0, 35)
+BtnMinus.Size = UDim2.new(0, 70, 0, 30)
 BtnMinus.Position = UDim2.new(0.55, 0, 0.3, 0)
 BtnMinus.Text = "-"
-BtnMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-BtnMinus.TextColor3 = Color3.new(1, 1, 1)
 
-local BtnStatus = Instance.new("TextButton", MainFrame)
-BtnStatus.Size = UDim2.new(0, 160, 0, 35)
-BtnStatus.Position = UDim2.new(0.05, 0, 0.65, 0)
-BtnStatus.Text = "ESTADO: ON"
-BtnStatus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-BtnStatus.TextColor3 = Color3.new(1, 1, 1)
-
---// Controles de Teclado
+--// Funciones de Control
 UserInputService.InputBegan:Connect(function(input, gp)
     if not gp then
-        -- F5 para Activar/Desactivar
         if input.KeyCode == Enum.KeyCode.F5 then
-            getgenv().AimConfig.Enabled = not getgenv().AimConfig.Enabled
-            BtnStatus.Text = getgenv().AimConfig.Enabled and "ESTADO: ON" or "ESTADO: OFF"
-            Notify(getgenv().AimConfig.Enabled)
-        -- Suprimir para Ocultar Menú y FOV
+            getgenv().AimbotEnabled = not getgenv().AimbotEnabled
+            StarterGui:SetCore("SendNotification", {
+                Title = "Zkller Aimbot",
+                Text = getgenv().AimbotEnabled and "ACTIVADO" or "DESACTIVADO",
+                Duration = 2
+            })
         elseif input.KeyCode == Enum.KeyCode.Delete then
             MainFrame.Visible = not MainFrame.Visible
             FOVCircle.Visible = MainFrame.Visible
@@ -96,39 +66,41 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
---// Botones del Menú
 BtnPlus.MouseButton1Click:Connect(function()
-    getgenv().AimConfig.FovRadius = getgenv().AimConfig.FovRadius + 10
-    Title.Text = "FOV: " .. getgenv().AimConfig.FovRadius
+    getgenv().FovRadius = getgenv().FovRadius + 10
+    Title.Text = "FOV: " .. getgenv().FovRadius
 end)
 
 BtnMinus.MouseButton1Click:Connect(function()
-    if getgenv().AimConfig.FovRadius > 10 then
-        getgenv().AimConfig.FovRadius = getgenv().AimConfig.FovRadius - 10
-        Title.Text = "FOV: " .. getgenv().AimConfig.FovRadius
-    end
+    getgenv().FovRadius = math.max(10, getgenv().FovRadius - 10)
+    Title.Text = "FOV: " .. getgenv().FovRadius
 end)
 
---// Lógica del ESP Gris (Separada para evitar errores)
-local function CreateEsp(player)
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "AimbotEspHighlight"
-    highlight.FillColor = Color3.fromRGB(150, 150, 150)
-    highlight.OutlineColor = Color3.fromRGB(200, 200, 200)
-    highlight.Parent = CoreGui
+--// Bucle Aimbot
+RunService.RenderStepped:Connect(function()
+    local MousePos = UserInputService:GetMouseLocation()
+    FOVCircle.Position = MousePos
+    FOVCircle.Radius = getgenv().FovRadius
     
-    RunService.RenderStepped:Connect(function()
-        if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-            highlight.Adornee = player.Character
-            highlight.Enabled = getgenv().AimConfig.EspEnabled
-        else
-            highlight.Enabled = false
+    if getgenv().AimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local Target = nil
+        local Closest = getgenv().FovRadius
+        
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local Pos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local Dist = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
+                    if Dist < Closest then
+                        Closest = Dist
+                        Target = v.Character.HumanoidRootPart
+                    end
+                end
+            end
         end
-    end)
-end
-
-for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then CreateEsp(p) end end
-Players.PlayerAdded:Connect(function(p) if p ~= LocalPlayer then CreateEsp(p) end end)
-
---// Lógica Aimbot
-local function GetClosestTarget()
+        
+        if Target then
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Target.Position), getgenv().Smoothing)
+        end
+    end
+end)
