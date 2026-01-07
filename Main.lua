@@ -6,13 +6,11 @@ local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- Variables seguras
-getgenv().HitboxSize = 10
+getgenv().HitboxSize = 20 -- Tamaño recomendado para TTK
 getgenv().HitboxEnabled = true
 getgenv().HitboxVisible = true
 getgenv().EspEnabled = false
 
--- Limpieza de rastro anterior
 if CoreGui:FindFirstChild("XenoHitboxSystem") then
     CoreGui:FindFirstChild("XenoHitboxSystem"):Destroy()
 end
@@ -79,13 +77,13 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 BtnPlus.MouseButton1Click:Connect(function()
-    getgenv().HitboxSize = getgenv().HitboxSize + 2 -- Incremento menor para mayor seguridad
+    getgenv().HitboxSize = getgenv().HitboxSize + 5
     Title.Text = "Hitbox: " .. getgenv().HitboxSize
 end)
 
 BtnMinus.MouseButton1Click:Connect(function()
-    if getgenv().HitboxSize > 2 then
-        getgenv().HitboxSize = getgenv().HitboxSize - 2
+    if getgenv().HitboxSize > 5 then
+        getgenv().HitboxSize = getgenv().HitboxSize - 5
     end
     Title.Text = "Hitbox: " .. getgenv().HitboxSize
 end)
@@ -100,25 +98,33 @@ BtnEsp.MouseButton1Click:Connect(function()
     BtnEsp.Text = getgenv().EspEnabled and "ESP: SI" or "ESP: NO"
 end)
 
--- Bucle de optimización y seguridad
-RunService.Stepped:Connect(function()
+-- Bucle de alto rendimiento para Proyectiles y Habilidades (TTK FIX)
+RunService.RenderStepped:Connect(function()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local root = player.Character.HumanoidRootPart
-            pcall(function()
-                root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
-                root.Transparency = getgenv().HitboxVisible and 0.8 or 1
-                root.Color = Color3.fromRGB(150, 150, 150)
-                root.Shape = Enum.PartType.Block
-                root.CanCollide = false
-                root.CanTouch = true
-                root.CanQuery = true
+        pcall(function()
+            if player ~= LocalPlayer and player.Character then
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                local hum = player.Character:FindFirstChild("Humanoid")
                 
-                -- SEGURIDAD EXTRA: Evita que el servidor detecte peso inusual
-                root.Massless = true
-                root.Velocity = Vector3.new(0,0,0)
-                root.RotVelocity = Vector3.new(0,0,0)
-            end)
-        end
+                if root and hum and hum.Health > 0 then
+                    -- Ajustes para que las habilidades detecten el golpe
+                    root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                    root.Transparency = getgenv().HitboxVisible and 0.8 or 1
+                    root.Color = Color3.fromRGB(150, 150, 150)
+                    root.Shape = Enum.PartType.Block
+                    
+                    -- PROPIEDADES PARA HABILIDADES LANZADAS:
+                    root.CanCollide = false
+                    root.CanTouch = true    -- Detecta contacto físico (Espadas)
+                    root.CanQuery = true    -- Detecta Raycasts (Proyectiles como la X de TTK)
+                    root.Massless = true
+                    
+                    -- Forzar que la hitbox sea la pieza principal de colisión
+                    if root:FindFirstChild("TouchInterest") == nil then
+                        Instance.new("TouchInterest", root)
+                    end
+                end
+            end
+        end)
     end
 end)
