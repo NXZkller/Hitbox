@@ -7,6 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 
 getgenv().HitboxSize = 10
 getgenv().HitboxEnabled = true
+getgenv().HitboxVisible = true
 
 if CoreGui:FindFirstChild("XenoHitboxSystem") then
     CoreGui:FindFirstChild("XenoHitboxSystem"):Destroy()
@@ -17,16 +18,14 @@ ScreenGui.Name = "XenoHitboxSystem"
 ScreenGui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 180, 0, 120)
+MainFrame.Size = UDim2.new(0, 180, 0, 160)
 MainFrame.Position = UDim2.new(0.5, -90, 0.4, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 8)
 Corner.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
@@ -38,57 +37,59 @@ Title.BackgroundTransparency = 1
 Title.Parent = MainFrame
 
 local BtnPlus = Instance.new("TextButton")
-BtnPlus.Size = UDim2.new(0, 60, 0, 40)
-BtnPlus.Position = UDim2.new(0.1, 0, 0.4, 0)
+BtnPlus.Size = UDim2.new(0, 70, 0, 35)
+BtnPlus.Position = UDim2.new(0.05, 0, 0.3, 0)
 BtnPlus.Text = "+"
 BtnPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 BtnPlus.TextColor3 = Color3.new(0, 1, 0)
-BtnPlus.Font = Enum.Font.GothamBold
 BtnPlus.Parent = MainFrame
 
 local BtnMinus = Instance.new("TextButton")
-BtnMinus.Size = UDim2.new(0, 60, 0, 40)
-BtnMinus.Position = UDim2.new(0.55, 0, 0.4, 0)
+BtnMinus.Size = UDim2.new(0, 70, 0, 35)
+BtnMinus.Position = UDim2.new(0.55, 0, 0.3, 0)
 BtnMinus.Text = "-"
 BtnMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 BtnMinus.TextColor3 = Color3.new(1, 0, 0)
-BtnMinus.Font = Enum.Font.GothamBold
 BtnMinus.Parent = MainFrame
 
-local function UpdateUI()
-    Title.Text = "Hitbox: " .. getgenv().HitboxSize
-end
+local BtnVis = Instance.new("TextButton")
+BtnVis.Size = UDim2.new(0, 160, 0, 35)
+BtnVis.Position = UDim2.new(0.05, 0, 0.65, 0)
+BtnVis.Text = "Visible: SI"
+BtnVis.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+BtnVis.TextColor3 = Color3.new(1, 1, 1)
+BtnVis.Parent = MainFrame
 
 BtnPlus.MouseButton1Click:Connect(function()
     getgenv().HitboxSize = getgenv().HitboxSize + 5
-    UpdateUI()
+    Title.Text = "Hitbox: " .. getgenv().HitboxSize
 end)
 
 BtnMinus.MouseButton1Click:Connect(function()
     if getgenv().HitboxSize > 5 then
         getgenv().HitboxSize = getgenv().HitboxSize - 5
-    else
-        getgenv().HitboxSize = 2
     end
-    UpdateUI()
+    Title.Text = "Hitbox: " .. getgenv().HitboxSize
+end)
+
+BtnVis.MouseButton1Click:Connect(function()
+    getgenv().HitboxVisible = not getgenv().HitboxVisible
+    BtnVis.Text = getgenv().HitboxVisible and "Visible: SI" or "Visible: NO"
 end)
 
 RunService.RenderStepped:Connect(function()
-    if getgenv().HitboxEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            pcall(function()
-                if player ~= LocalPlayer and player.Character then
-                    local root = player.Character:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
-                        root.Transparency = 0.8
-                        root.Shape = Enum.PartType.Ball
-                        root.Color = Color3.fromRGB(255, 0, 0)
-                        root.CanCollide = false
-                        root.Massless = true
-                    end
+    for _, player in pairs(Players:GetPlayers()) do
+        pcall(function()
+            if player ~= LocalPlayer and player.Character then
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                    root.Transparency = getgenv().HitboxVisible and 0.8 or 1
+                    root.Color = Color3.fromRGB(255, 0, 0)
+                    root.Shape = Enum.PartType.Ball
+                    root.CanCollide = false
                 end
-            end)
-        end
+            end
+        end)
     end
 end)
