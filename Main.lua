@@ -3,6 +3,7 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 getgenv().HitboxSize = 10
@@ -60,6 +61,13 @@ BtnVis.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
 BtnVis.TextColor3 = Color3.new(1, 1, 1)
 BtnVis.Parent = MainFrame
 
+-- Lógica para ocultar menú con Right Shift
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
 BtnPlus.MouseButton1Click:Connect(function()
     getgenv().HitboxSize = getgenv().HitboxSize + 5
     Title.Text = "Hitbox: " .. getgenv().HitboxSize
@@ -77,6 +85,7 @@ BtnVis.MouseButton1Click:Connect(function()
     BtnVis.Text = getgenv().HitboxVisible and "Visible: SI" or "Visible: NO"
 end)
 
+-- Bucle de aplicación de Hitbox
 RunService.RenderStepped:Connect(function()
     for _, player in pairs(Players:GetPlayers()) do
         pcall(function()
@@ -85,9 +94,10 @@ RunService.RenderStepped:Connect(function()
                 if root then
                     root.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
                     root.Transparency = getgenv().HitboxVisible and 0.8 or 1
-                    root.Color = Color3.fromRGB(255, 0, 0)
-                    root.Shape = Enum.PartType.Ball
+                    root.Color = Color3.fromRGB(150, 150, 150) -- COLOR GRIS
+                    root.Shape = Enum.PartType.Block -- FORMA CUBO
                     root.CanCollide = false
+                    root.Massless = true
                 end
             end
         end)
